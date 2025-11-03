@@ -1,0 +1,20 @@
+{
+  "name": "Story Well",
+  "short_name": "StoryWell",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "screenshots": [
+    { "src": "./screenshots/home.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "short_name": "Home", "url": "/#/" },
+    { "name": "Tambah Cerita", "short_name": "Tambah", "url": "/#/add" }
+  ]
+}
