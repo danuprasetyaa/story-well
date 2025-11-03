@@ -25,16 +25,6 @@ export async function idbPut(store, value) {
   });
 }
 
-export async function idbDelete(store, key) {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(store, 'readwrite');
-    tx.objectStore(store).delete(key);
-    tx.oncomplete = () => res();
-    tx.onerror = () => rej(tx.error);
-  });
-}
-
 export async function idbGetAll(store) {
   const db = await openDB();
   return new Promise((res, rej) => {
@@ -42,6 +32,16 @@ export async function idbGetAll(store) {
     const rq = tx.objectStore(store).getAll();
     rq.onsuccess = () => res(rq.result);
     rq.onerror = () => rej(rq.error);
+  });
+}
+
+export async function idbDelete(store, key) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
   });
 }
 
