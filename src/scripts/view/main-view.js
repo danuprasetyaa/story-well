@@ -4,7 +4,6 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-
 import {
   createDashboardTemplate,
   createStoryCardTemplate,
@@ -14,7 +13,7 @@ import {
   createSavedStoriesPageTemplate
 } from './template-creator.js';
 
-import { idbGetAll, idbDelete } from '/src/scripts/idb.js';
+import { idbPut, idbGetAll, idbDelete } from '/src/scripts/idb.js';
 
 // Konfigurasi ikon Leaflet
 L.Icon.Default.mergeOptions({
@@ -29,11 +28,13 @@ class MainView {
     this._mapInstance = null;
   }
 
-  // Menampilkan halaman Dashboard
+  // ============================
+  //  DASHBOARD
+  // ============================
   renderDashboard(stories, userName) {
     this._appContent.innerHTML = createDashboardTemplate(userName);
     const storyListEl = document.getElementById('story-list');
-    
+
     if (stories.length === 0) {
       storyListEl.innerHTML = `<p>No stories found.</p>`;
     } else {
@@ -42,11 +43,49 @@ class MainView {
         storyListEl.innerHTML += createStoryCardTemplate(story);
       });
     }
-    
+
     this._initDashboardMap(stories);
+
+    // === Tambahkan event listener untuk tombol Save & Delete ===
+    storyListEl.addEventListener('click', async (e) => {
+      const saveBtn = e.target.closest('.save-btn');
+      const delBtn = e.target.closest('.delete-btn');
+
+      // SAVE STORY
+      if (saveBtn) {
+        const id = saveBtn.dataset.id;
+        const story = stories.find(s => s.id === id);
+        if (!story) return;
+        try {
+          await idbPut('items', story);
+          const reg = await navigator.serviceWorker.ready;
+          reg.showNotification('Story Well', {
+            body: 'Story berhasil disimpan ke Saved!',
+            tag: 'story-saved'
+          });
+        } catch (err) {
+          console.error(err);
+          alert('Gagal menyimpan story.');
+        }
+      }
+
+      // DELETE STORY
+      if (delBtn) {
+        const id = delBtn.dataset.id;
+        try {
+          await idbDelete('items', id);
+          alert('Story dihapus dari penyimpanan lokal!');
+        } catch (err) {
+          console.error(err);
+          alert('Gagal menghapus story.');
+        }
+      }
+    });
   }
 
-  // Menampilkan halaman Login
+  // ============================
+  //  LOGIN
+  // ============================
   renderLoginPage(loginHandler) {
     this._appContent.innerHTML = createLoginPageTemplate();
     const form = document.getElementById('login-form');
@@ -63,51 +102,57 @@ class MainView {
     });
   }
 
-  // Menampilkan halaman Register
+  // ============================
+  //  REGISTER
+  // ============================
   renderRegisterPage(registerHandler) {
     this._appContent.innerHTML = createRegisterPageTemplate();
     const form = document.getElementById('register-form');
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const errorEl = document.getElementById('register-error');
-      errorEl.textContent = ''; 
+      errorEl.textContent = '';
 
       try {
         const name = form.name.value;
         const email = form.email.value;
         const password = form.password.value;
-        
-        // Memanggil handler untuk registrasi (yang diberikan oleh Presenter)
         await registerHandler(name, email, password);
-
       } catch (error) {
         errorEl.textContent = error.message;
       }
     });
   }
 
-  // Menampilkan halaman Tambah Cerita
+  // ============================
+  //  ADD STORY
+  // ============================
   renderAddStoryPage(addStoryHandler) {
     this._appContent.innerHTML = createAddStoryPageTemplate();
     this._initAddStoryForm(addStoryHandler);
   }
 
-  // Inisialisasi Peta Dashboard
+  // ============================
+  //  PETA DASHBOARD
+  // ============================
   _initDashboardMap(stories) {
     this._mapInstance = L.map('map-container').setView([-2.548926, 118.0148634], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(this._mapInstance);
-    
+
     stories.forEach(story => {
       if (story.lat && story.lon) {
         L.marker([story.lat, story.lon])
-         .addTo(this._mapInstance)
-         .bindPopup(`<b>${story.name}</b>`);
+          .addTo(this._mapInstance)
+          .bindPopup(`<b>${story.name}</b>`);
       }
     });
   }
 
+  // ============================
+  //  FORM TAMBAH CERITA
+  // ============================
   _initAddStoryForm(addStoryHandler) {
     const form = document.getElementById('add-story-form');
     const errorMessage = document.getElementById('error-message');
@@ -132,7 +177,7 @@ class MainView {
       mapPicker.panTo(e.latlng);
     });
 
-    // === BAGIAN YANG HILANG: LOGIKA KAMERA DIMASUKKAN KEMBALI DI SINI ===
+    // --- Logika Kamera ---
     const videoEl = document.getElementById('camera-preview');
     const openCameraBtn = document.getElementById('open-camera-btn');
     const captureBtn = document.getElementById('capture-btn');
@@ -169,27 +214,21 @@ class MainView {
       canvas.width = videoEl.videoWidth;
       canvas.height = videoEl.videoHeight;
       canvas.getContext('2d').drawImage(videoEl, 0, 0);
-
       canvas.toBlob(blob => {
         const file = new File([blob], "camera-shot.jpg", { type: "image/jpeg" });
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         photoInput.files = dataTransfer.files;
       }, 'image/jpeg');
-
-      // Penting: matikan stream kamera setelah selesai
       stream.getTracks().forEach(track => track.stop());
       videoEl.style.display = 'none';
       captureBtn.style.display = 'none';
       openCameraBtn.style.display = 'inline-block';
     });
-    // === AKHIR BAGIAN YANG HILANG ===
 
-    // --- Logika untuk Submit Form ---
+    // --- Logika Submit ---
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-
-      // ... (sisa logika submit form tidak perlu diubah) ...
       const photo = form.photo.files[0];
       if (photo && photo.size > 1000000) {
         errorMessage.textContent = 'Ukuran foto tidak boleh lebih dari 1 MB.';
@@ -199,7 +238,6 @@ class MainView {
         errorMessage.textContent = 'Please fill all required fields correctly.';
         return;
       }
-      
       const formData = new FormData(form);
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.textContent = 'Posting...';
@@ -218,25 +256,34 @@ class MainView {
     });
   }
 
-    async renderSavedStoriesPage() {
-    const items = await idbGetAll('items'); 
-    this._appContent.innerHTML = createSavedStoriesPageTemplate(items);
+  // ============================
+  //  HALAMAN SAVED STORIES
+  // ============================
+  async renderSavedStoriesPage() {
+    const items = await idbGetAll('items');
+    if (items.length === 0) {
+      this._appContent.innerHTML = `
+        <section class="empty-saved">
+          <p>Tidak ada story yang disimpan.</p>
+        </section>
+      `;
+      return;
+    }
 
-    // delegasi klik untuk tombol hapus
+    this._appContent.innerHTML = createSavedStoriesPageTemplate(items);
     const savedList = document.getElementById('saved-list');
+
     savedList.addEventListener('click', async (e) => {
       const btn = e.target.closest('.delete-btn');
       if (!btn) return;
       const id = btn.dataset.id;
       try {
         await idbDelete('items', id);
-        // tampilkan notifikasi bahwa dihapus
         const reg = await navigator.serviceWorker.ready;
         reg.showNotification('Story Well', {
           body: 'Data cerita dihapus.',
-          tag: 'story-deleted'
+          tag: 'story-deleted',
         });
-        // refresh page
         this.renderSavedStoriesPage();
       } catch (err) {
         console.error(err);

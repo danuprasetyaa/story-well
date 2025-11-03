@@ -88,16 +88,19 @@ function updateNavLinksVisibility() {
   const dashboardLink = document.getElementById('dashboard-link');
   const addStoryLink = document.getElementById('add-story-link');
   const logoutButton = document.getElementById('logout-button');
+  const savedLink = document.getElementById('saved-link');
 
-  if (!dashboardLink || !addStoryLink || !logoutButton) return;
+  if (!dashboardLink || !addStoryLink || !logoutButton || !savedLink) return;
 
   if (isLoggedIn) {
     dashboardLink.style.display = 'inline';
     addStoryLink.style.display = 'inline';
+    savedLink.style.display = 'inline';
     logoutButton.style.display = 'inline-block';
   } else {
     dashboardLink.style.display = 'none';
     addStoryLink.style.display = 'none';
+    savedLink.style.display = 'none';
     logoutButton.style.display = 'none';
   }
 }

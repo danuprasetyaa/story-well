@@ -8,6 +8,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
     clean: true,
+    publicPath: './',
   },
   module: {
     rules: [
@@ -17,10 +18,10 @@ module.exports = {
     ],
   },
     plugins: [
-      new HtmlWebpackPlugin({ template: './index.html', filename: 'index.html' }),
+      new HtmlWebpackPlugin({ template: './src/index.html', filename: 'index.html' }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: './manifest.webmanifest', to: 'manifest.webmanifest' },
+          { from: './src/manifest.webmanifest', to: 'manifest.webmanifest' },
           { from: './src/icons', to: 'icons' },
           { from: './src/screenshots', to: 'screenshots', noErrorOnMissing: true },
           { from: './src/scripts/service-worker.js', to: 'service-worker.js' }

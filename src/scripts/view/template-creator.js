@@ -14,6 +14,10 @@ const createStoryCardTemplate = (story) => `
         </small>
       ` : ''}
       </div>
+      <div class="story-actions">
+        <button class="save-btn" data-id="${story.id}">💾 Save</button>
+        <button class="delete-btn" data-id="${story.id}">🗑 Delete</button>
+      </div>
   </article>
 `;
 

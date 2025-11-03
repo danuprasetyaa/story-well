@@ -3,9 +3,14 @@ const APP_CACHE  = 'app-shell-v2';
 const DATA_CACHE = 'data-cache-v1';
 
 const APP_SHELL = [
-  '/', '/index.html',
+  '/', 
+  '/index.html',
+  '/bundle.js',
+  '/styles/style.css',
   '/manifest.webmanifest',
-  '/icons/icon-192.png', '/icons/icon-512.png', '/icons/badge-72.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/badge-72.png',
 ];
 
 /* ====== INSTALL: cache app shell ====== */
